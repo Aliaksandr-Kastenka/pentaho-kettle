@@ -469,7 +469,10 @@ public class RowMeta implements RowMetaInterface {
    */
   @Override
   public int indexOfValue( String valueName ) {
-    Integer index = valueIndexMap.get( valueName.toLowerCase() );
+    Integer index = null;
+    if( valueName != null ) {
+      index = valueIndexMap.get( valueName.toLowerCase() );
+    }
     if ( index == null ) {
       return -1;
     }
