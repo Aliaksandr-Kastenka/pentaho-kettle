@@ -2267,7 +2267,7 @@ public class TableView extends Composite {
     return colinfo.getComboValues();
   }
 
-  private void editCombo( TableItem row, int rownr, int colnr ) {
+  private void editCombo( TableItem row, final int rownr, final int colnr ) {
     beforeEdit = getItemText( row );
     fieldChanged = false;
     ColumnInfo colinfo = columns[colnr - 1];
@@ -2304,6 +2304,37 @@ public class TableView extends Composite {
     combo.setToolTipText( colinfo.getToolTip() == null ? "" : colinfo.getToolTip() );
     combo.setVisible( true );
     combo.addKeyListener( lsKeyCombo );
+
+    final boolean useVariables = colinfo.isUsingVariables();
+    if ( useVariables ) {
+      GetCaretPositionInterface getCaretPositionInterface = new GetCaretPositionInterface() {
+        @Override
+        public int getCaretPosition() {
+          //return ( (TextVar) text ).getTextWidget().getCaretPosition();
+          return 0;
+        }
+      };
+
+      // The text widget will be disposed when we get here
+      // So we need to write to the table row
+      //
+      InsertTextInterface insertTextInterface = new InsertTextInterface() {
+        @Override
+        public void insertText( String string, int position ) {
+          StringBuilder buffer = new StringBuilder( table.getItem( rownr ).getText( colnr ) );
+          buffer.insert( position, string );
+          table.getItem( rownr ).setText( colnr, buffer.toString() );
+          int newPosition = position + string.length();
+          edit( rownr, colnr );
+          //( (TextVar) text ).setSelection( newPosition );
+          //( (TextVar) text ).showSelection();
+          //setColumnWidthBasedOnTextField( colnr, useVariables );
+        }
+      };
+      ControlSpaceKeyAdapter controlSpaceKeyAdapter =
+        new ControlSpaceKeyAdapter( variables, combo, getCaretPositionInterface, insertTextInterface );
+      combo.addKeyListener( controlSpaceKeyAdapter );
+    }
 
     if ( colinfo.getSelectionAdapter() != null ) {
       combo.addSelectionListener( columns[colnr - 1].getSelectionAdapter() );
